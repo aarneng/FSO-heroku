@@ -1,7 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-
+const Person = require("./models/person")
 
 const app = express()
 app.use(morgan(function (tokens, req, res) {
@@ -16,34 +16,35 @@ app.use(morgan(function (tokens, req, res) {
 }))
 app.use(cors())
 app.use(express.json())
+app.use(express.static('build'))
 
-let persons =  [
-  {
-    name: "Dan Abramov",
-    number: "12-43-234345",
-    id: 3
-  },
-  {
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-    id: 4
-  },
-  {
-    name: "Arto Hellas",
-    number: "123-456789",
-    id: 1
-  },
-  {
-    name: "Phone man",
-    number: "74786",
-    id: 5
-  },
-  {
-    name: "test",
-    number: "12312321",
-    id: 2
-  }
-]
+// let persons =  [
+//   {
+//     name: "Dan Abramov",
+//     number: "12-43-234345",
+//     id: 3
+//   },
+//   {
+//     name: "Mary Poppendieck",
+//     number: "39-23-6423122",
+//     id: 4
+//   },
+//   {
+//     name: "Arto Hellas",
+//     number: "123-456789",
+//     id: 1
+//   },
+//   {
+//     name: "Phone man",
+//     number: "74786",
+//     id: 5
+//   },
+//   {
+//     name: "test",
+//     number: "12312321",
+//     id: 2
+//   }
+// ]
 
 app.get("/", (request, response) => {
   response.send("<div>hello there </div>")
@@ -57,8 +58,10 @@ app.get("/info", (request, response) => {
   `)
 })
 
-app.get("/api/persons", (request, response) => {
-  response.json(persons)
+app.get('/api/persons', (request, response) => {
+  Person.find({}).then(person => {
+    response.json(person)
+  })
 })
 
 app.get("/api/persons/:id", (request, response) => {

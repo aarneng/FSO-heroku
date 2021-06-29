@@ -1,0 +1,2 @@
+.notification{color:green;display:inline-block;background:#d3d3d3;font-size:20px;border-style:solid;border-radius:5px;padding:10px;margin-bottom:10px;max-width:60vw}.error{color:red}.elementToFadeInAndOut{-webkit-animation:fadeinout .3s linear forwards;animation:fadeinout .3s linear forwards}@-webkit-keyframes fadeinout{0%,to{opacity:0}50%{opacity:1}}@keyframes fadeinout{0%,to{opacity:0}50%{opacity:1}}
+/*# sourceMappingURL=main.721bbd72.chunk.css.map */

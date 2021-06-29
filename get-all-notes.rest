@@ -2,7 +2,7 @@ POST https://damp-castle-69113.herokuapp.com/api/persons
 Content-Type: application/json
 
 {
-  "name": "http man",
+  "name": "rest man",
   "number": "768534"
 }
 
