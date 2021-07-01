@@ -2,8 +2,10 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require("./models/person")
+// const { get } = require('mongoose')
 
 const app = express()
+
 app.use(morgan(function (tokens, req, res) {
   return [
     tokens.method(req, res),
@@ -18,94 +20,92 @@ app.use(cors())
 app.use(express.json())
 app.use(express.static('build'))
 
-// let persons =  [
-//   {
-//     name: "Dan Abramov",
-//     number: "12-43-234345",
-//     id: 3
-//   },
-//   {
-//     name: "Mary Poppendieck",
-//     number: "39-23-6423122",
-//     id: 4
-//   },
-//   {
-//     name: "Arto Hellas",
-//     number: "123-456789",
-//     id: 1
-//   },
-//   {
-//     name: "Phone man",
-//     number: "74786",
-//     id: 5
-//   },
-//   {
-//     name: "test",
-//     number: "12312321",
-//     id: 2
-//   }
-// ]
 
 app.get("/", (request, response) => {
   response.send("<div>hello there </div>")
 })
 
 app.get("/info", (request, response) => {
-  response.send(`
-    <h1>Phonebook API </h1><br>
-    Phonebook has the information of ${persons.length} people<br>
-    ${new Date()}
-  `)
+  Person.find({})
+    .then(persons => {
+      response.send(`
+        <h1>Phonebook API </h1><br>
+        Phonebook has the information of ${persons.length} people<br>
+        ${new Date()}
+      `)
+    })
 })
 
 app.get('/api/persons', (request, response) => {
-  Person.find({}).then(person => {
-    response.json(person)
+  Person.find({}).then(persons => {
+    response.json(persons)
   })
 })
 
-app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.filter(person => person.id === id)[0]
-  if (person) 
-    response.json(person)
-  else 
-    response.status(404).end()
+app.get("/api/persons/:id", (request, response, next) => {
+  const id = request.params.id
+  Person.findById(id)
+    .then(person => {
+      if (person)
+        response.json(person)
+      else
+        response.status(404).end()
+    })
+    .catch(error => next(error))
 })
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter(person => person.id != id)
-  response.status(204).end()
+app.delete("/api/persons/:id", (request, response, next) => {
+  const id = request.params.id
+  Person.findByIdAndRemove(id)
+    .then(person => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
-app.post("/api/persons", (request, response) => {
-  const person = request.body
+app.post("/api/persons", (request, response, next) => {
+  const body = request.body
 
-  if (!person.name) {
-    return response.status(400).json({
-      error: "name missing"
-    })
+  // if (!body.name) {
+  //   return response.status(400).json({
+  //     error: "name missing"
+  //   })
+  // }
+  // if (!body.number) {
+  //   return response.status(400).json({
+  //     error: "number missing"
+  //   })
+  // }
+
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+    id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+  })
+
+  person.save()
+    .then(person => 
+      response.json(person)
+    )
+    .catch(e => next(e))
+})
+
+app.put("/api/persons/:id", (req, res, next) => {
+  const body = req.body
+
+  const person = {
+    name: body.name,
+    number: body.number,
   }
-  if (!person.number) {
-    return response.status(400).json({
-      error: "number missing"
-    })
-  }
-  if (persons.find(i => i.name === person.name)) {
-    return response.status(400).json({
-      error: "name is already in the book"
-    })
-  }
-  person.id = getMaxUnusedId()
-  console.log(getMaxUnusedId());
-  persons = persons.concat(person)
-  response.json(person)
+
+  Person.findByIdAndUpdate(req.params.id, person, {new: true})
+    .then(updatedPerson => res.json(updatedPerson))
+    .catch(e => next(e))
+  
 })
 
 const PORT = process.env.PORT || 3001
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 function getMaxUnusedId() {
   // runs in O(n), yay!
@@ -125,3 +125,19 @@ function getMaxUnusedId() {
     if (!usedIDs[i]) return i
   }
 }
+
+function errorHandler(error, request, response, next) {
+  console.error(error.name, error.message)
+
+  if (error.name === "CastError") {
+    return response.status(400).send({error: "Malformatted ID"})
+  }
+  if (error.name === "ValidationError") {
+    return response.status(400).send({error: error.message})
+  }
+  
+
+  next(error)
+}
+
+app.use(errorHandler)  // has to be the last loaded middleware and after the request that fails
