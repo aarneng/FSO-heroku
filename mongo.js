@@ -1,3 +1,4 @@
+/* eslint-disable */
 // // mongodb+srv://aarnenm:<password>@cluster0.qm2s6.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 // const mongoose = require('mongoose')
 // const uniqueValidator = require('mongoose-unique-validator');
